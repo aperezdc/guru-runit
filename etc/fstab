@@ -1,0 +1,24 @@
+#
+# dev     mountpoint        fstype  fsflags                       dump pass
+#
+tmpfs     /dev/shm          tmpfs   rw,nosuid,nodev                  0 0
+tmpfs     /run              tmpfs   rw,nosuid                        0 0
+devpts    /dev/pts          devpts  rw,noexec,nosuid,gid=5,mode=620  0 0
+sysfs     /sys              sysfs   rw,noexec,nosuid,nodev           0 0
+proc      /proc             proc    rw,noexec,nosuid,nodev           0 0
+/dev/sdb  /var/.sdhc        ext4    rw,noatime,relatime              0 0
+
+#
+# Bind-mounts, very useful to remap things from the miniSD
+#
+/var/.sdhc/tmp            /tmp            none  bind  0 0
+/var/.sdhc/tmp            /var/tmp        none  bind  0 0
+/var/.sdhc/home           /home           none  bind  0 0
+/var/.sdhc/var-www        /var/www        none  bind  0 0
+/var/.sdhc/var-cache-apt  /var/cache/apt  none  bind  0 0
+
+#
+# Swap files
+#
+/var/.sdhc/swap0          swap            swap  sw   0 0
+
