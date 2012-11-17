@@ -1,0 +1,20 @@
+#!/bin/sh
+exec 2>&1
+
+if [ -r /run/early-sshd.pid ] && ! [ "$RUN_EARLY" ] ; then
+	kill "`cat /run/early-sshd.pid`"
+	rm -f /run/early-sshd.pid
+	sleep 1
+fi
+
+# sshd wants to be started with absolute pathname
+SSHD=$(which sshd) || sv down $(pwd)
+
+PRIVSEP_DIR=/var/run/sshd
+mkdir -p "$PRIVSEP_DIR"
+
+exec "$SSHD" -D -e
+
+# memory limits set by chpst are inherited to subprocesses,
+# disabled by default
+#exec chpst -m8000000 "$SSHD" -D -e

@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+LOG=/var/log/ssh
+
+if [ ! -d "$LOG" ] ; then
+	mkdir -p -m 0750 "$LOG"
+	chown -R log:adm "$LOG"
+fi
+
+exec /usr/bin/chpst -u log:adm /usr/bin/drlog -t "$LOG"

@@ -1,0 +1,12 @@
+#! /bin/sh
+exec 2>&1
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+echo 'Waiting for services to stop...'
+sv -w196 force-stop /etc/service/*
+sv exit /etc/service/*
+
+echo 'Saving date/time...'
+date -u '+%m%d%H%M%Y.%S' > /var/lastdatetime
+

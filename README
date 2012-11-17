@@ -1,0 +1,10 @@
+GuruPlug runit init scripts
+
+Works in:
+
+- Debian wheezy.
+
+Needed tools / packages:
+
+- dmon
+- runit

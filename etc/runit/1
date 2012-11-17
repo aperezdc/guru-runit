@@ -1,0 +1,75 @@
+#! /bin/sh
+# system one time tasks
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+# First of all, try to restore date/time: This sets a reasonable
+# initial time before the rest of services kick in by using the
+# last shutdown time. Some devices do not have a RTC and time
+# would be reset to some random value. It is better to have a
+# well-known value (even if older) than an older one.
+#
+if [ -r /var/lastdatetime ] ; then
+	echo 'Restoring last-known date/time... '
+	T="`head -1 /var/lastdatetime`"
+	T="`date -u "$T" 2> /dev/null`"
+	if [ $? = 0 ] ; then
+		echo "  date/time: $T"
+	else
+		echo "  failed restoring date/time"
+	fi
+	T=''
+fi
+
+# We *need* those. Note: Assumes entries present in /etc/fstab
+mount /proc
+mount /sys
+mount /run
+mkdir --mode=755 /run/lock /run/udev /run/network \
+                 /run/resolvconf /run/resolvconf/interface
+
+# Make sure that the root filesystem is read-write
+mount -o rw,remount /
+
+# Reuse the udev initscript for now. This is ugly, but handles mounting the
+# tmpfs on /dev and some other crap. After udev is started, we can mount
+# /dev/pts and /dev/shm safely, so make sure that the directories are
+# present and try to mount everything in a single row.
+/etc/init.d/udev start
+udevadm settle
+echo "Waiting for /dev/sdb ..."
+while [ ! -r /dev/sdb ] ; do
+	sleep 1
+done
+mount /var/.sdhc
+mkdir -p /dev/pts /dev/shm
+mount -a -t nonfs,nfs4,smbfs,cifs,ncp,ncpfs,coda,ocfs2,gfs,gfs2,ceph -O no_netdev
+swapon -a
+
+# Set the host name from /etc/hostname and sysctl options
+[ -r /etc/hostname ] && hostname "`head -1 /etc/hostname`"
+sysctl -p
+
+# Bring up network in a really shitty (but working) way.
+ifconfig lo 127.0.0.1 netmask 255.0.0.0 up
+#dhclient -4 -v eth0
+
+# Ouch, this hurts
+rm -f /etc/resolv.conf
+echo 'nameserver 127.0.0.1' > /etc/resolv.conf
+
+# And now create [uw]tmp, otherwise logins will behave badly
+touch /run/utmp
+if grep -q ^utmp: /etc/group
+then
+	chmod 664  /run/utmp
+	chgrp utmp /run/utmp
+fi
+
+dmon -E RUN_EARLY=1 -S -s -p /run/early-sshd.pid  -e /etc/sv/ssh/run
+dmon -E RUN_EARLY=1 -S -s -p /run/early-getty.pid -e /etc/sv/getty-ttyS0/run
+
+rm -f /sbin/runit.old
+touch /etc/runit/stopit
+chmod 0 /etc/runit/stopit
+
