@@ -7,7 +7,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 # initial time before the rest of services kick in by using the
 # last shutdown time. Some devices do not have a RTC and time
 # would be reset to some random value. It is better to have a
-# well-known value (even if older) than an older one.
+# well-known value (even if old) than an older one.
 #
 if [ -r /var/lastdatetime ] ; then
 	echo 'Restoring last-known date/time... '
@@ -52,7 +52,23 @@ sysctl -p
 
 # Bring up network in a really shitty (but working) way.
 ifconfig lo 127.0.0.1 netmask 255.0.0.0 up
-#dhclient -4 -v eth0
+dhclient -v -4 eth0
+
+# This sets the initial after booting time from hora.roa.es (stratum 1)
+# The IP address is used to avoid relying on DNS being available.
+ntpdate -b 150.214.94.5
+
+# Bring up interfaces for the wifi-wired bridge. All interfaces
+# MUST be configured before adding them to the bridge.
+ifconfig eth1 up
+ifconfig uap0 up
+/etc/network/uap start
+brctl addbr br0
+brctl stp br0 off
+brctl addif br0 eth1
+brctl addif br0 uap0
+ifconfig br0 172.16.0.1/12 up
+/etc/network/firewall
 
 # Ouch, this hurts
 rm -f /etc/resolv.conf

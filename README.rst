@@ -12,7 +12,7 @@ Works with
 Gets you
 ========
 
-- Blazing fast boot times (under 5 seconds).
+- Blazing fast boot times (under 10 seconds).
 - Daemon supervision (using ``runit``).
 - Early SSH and serial line, for debugging boot issues.
 
@@ -24,6 +24,9 @@ Needed tools / packages
 - runit
 - openssh-server
 - util-linux
+- bridge-utils
+- dhclient
+- ntpdate
 
 
 Instructions
